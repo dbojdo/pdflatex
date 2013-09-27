@@ -20,9 +20,8 @@
 	},
 	"autoload" : {
 		"psr-0" : {
-			"Webit\\Pdf\\PdfLatex" : ""
+			"Webit\\Pdf\\PdfLatex" : "lib"
 		}
 	},
-	"target-dir" : "Webit/Pdf/PdfLatex",
 	"minimum-stability" : "dev"
 }
