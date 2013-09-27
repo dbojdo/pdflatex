@@ -1,4 +1,0 @@
-pdflatex
-========
-
-Pdflatex generator
