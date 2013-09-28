@@ -33,4 +33,8 @@ class TwigExtension extends \Twig_Extension {
     public function newLine($input) {
         return Util::newLine($input);
     }
+    
+    public function locate($input) {
+        
+    }
 }

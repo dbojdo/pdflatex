@@ -3,10 +3,10 @@ namespace Webit\Pdf\PdfLatex;
 
 class Util {
     public static function escapeLatexSpecialChars($input) {
-        if (is_string($string)) {
+        if (is_string($input)) {
             $search = array('\\', '#', '$', '€', '%', '&', '~', '_', '{', '}', '^', '\\$\backslash\\$');
             $replace = array('$\backslash$', '\#', '\$', '\euro', '\%', '\&', '$\sim$', '\_', '\{', '\}', '$\hat{~}$', '$\backslash$');
-            return str_replace($search, $replace, $var);
+            return str_replace($search, $replace, $input);
         }
         
         return $input;
