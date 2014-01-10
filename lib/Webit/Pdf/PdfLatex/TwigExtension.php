@@ -13,7 +13,8 @@ class TwigExtension extends \Twig_Extension {
         return array(
             'escapeLatexChars' => new \Twig_Filter_Method($this, 'escapeLatexSpecialChars'),
             'noBreakSpace' => new \Twig_Filter_Method($this, 'noBreakSpace'),
-            'newLine' => new \Twig_Filter_Method($this, 'newLine')
+            'newLine' => new \Twig_Filter_Method($this, 'newLine'),
+        	'latexCommand' => new \Twig_Filter_Method($this, 'wrapLatexCommand')
         );
     }
     
@@ -34,7 +35,7 @@ class TwigExtension extends \Twig_Extension {
         return Util::newLine($input);
     }
     
-    public function locate($input) {
-        
+    public function wrapLatexCommand($input, $command, array $options = array()) {
+    	return Util::command($input, $command, $options);
     }
 }
