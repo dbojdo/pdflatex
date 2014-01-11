@@ -1,7 +1,7 @@
 <?php
 namespace Webit\Pdf\PdfLatex\HtmlConverter;
 
-class ConverterSimple {
+class ConverterSimple implements ConverterInterface {
 	
 	/**
 	 * Color schema constants

@@ -1,7 +1,19 @@
 <?php
 namespace Webit\Pdf\PdfLatex;
 
-class TwigExtension extends \Twig_Extension {    
+use Webit\Pdf\PdfLatex\HtmlConverter\ConverterInterface;
+class TwigExtension extends \Twig_Extension {
+
+	/**
+	 * 
+	 * @var ConverterInterface
+	 */
+	private $converter;
+	
+	public function __construct(ConverterInterface $converter) {
+		$this->converter = $converter;
+	}
+	
     public function getFunctions()
     {
         return array(
@@ -14,7 +26,8 @@ class TwigExtension extends \Twig_Extension {
             'escapeLatexChars' => new \Twig_Filter_Method($this, 'escapeLatexSpecialChars'),
             'noBreakSpace' => new \Twig_Filter_Method($this, 'noBreakSpace'),
             'newLine' => new \Twig_Filter_Method($this, 'newLine'),
-        	'latexCommand' => new \Twig_Filter_Method($this, 'wrapLatexCommand')
+        	'latexCommand' => new \Twig_Filter_Method($this, 'wrapLatexCommand'),
+        	'toLatex' => new \Twig_Filter_Method($this, 'htmlToLatex')
         );
     }
     
@@ -37,5 +50,9 @@ class TwigExtension extends \Twig_Extension {
     
     public function wrapLatexCommand($input, $command, array $options = array()) {
     	return Util::command($input, $command, $options);
+    }
+    
+    public function htmlToLatex($input) {
+    	return $this->converter->convert($input);
     }
 }
