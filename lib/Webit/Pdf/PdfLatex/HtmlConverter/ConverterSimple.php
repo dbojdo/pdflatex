@@ -16,7 +16,7 @@ class ConverterSimple implements ConverterInterface {
 	 */
 	public function convert($html) {
 		// strip not supported tags
-		$output = strip_tags($input,'<p><i><em><u><b><strong><strike><span><del><hr><br>');
+		$output = strip_tags($html,'<p><i><em><u><b><strong><strike><span><del><hr><br>');
 		
 		// parse paragraphs
 		$map = array(
@@ -34,8 +34,8 @@ class ConverterSimple implements ConverterInterface {
 				'/\<u\>/'=>'\\underline{',
 				'/\<strike\>/'=>'\\sout{',
 				'/\<del\>/'=>'\\sout{',
-				'/\<hr\/?\>/','\\hline',
-				'/\br\/?\>/','\\\\\\\\',
+// 				'/\<hr\/?\>/','\\hline',
+// 				'/\br\/?\>/','\\\\',
 				'/\<\/.*?\>/'=>'}'
 		);
 		$output = preg_replace(array_keys($map),array_values($map),$output);
@@ -49,13 +49,12 @@ class ConverterSimple implements ConverterInterface {
 				$string = '';
 				foreach($arStyle as $style) {
 					$replacement = ConverterSimple::parseColorStyle($style);
-					if($replacement === false) {
-						return '{';
+					if($replacement) {
+						$string .= $replacement;
 					}
-					$string .= $replacement;
 				}
 				
-				return $string;
+				return empty($string) ? '{' : $string;
 			}
 		}, $output);
 	
@@ -75,14 +74,14 @@ class ConverterSimple implements ConverterInterface {
 				} else {
 					$schema = substr($value,0,4) == 'rgb(' ? self::COLOR_RGB : null;
 				}
-		
+				
 				if($schema == self::COLOR_RGB) {
 					$value = substr($value, 4,-1);
 				} else {
 					return false;
 				}
 			}
-		
+
 			if($prop == 'color') {
 				return sprintf('\textcolor[%s]{%s}{',$schema, $value);
 			}
@@ -91,6 +90,6 @@ class ConverterSimple implements ConverterInterface {
 			}
 		}
 		
-		return false
+		return false;
 	}
 }
