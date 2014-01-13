@@ -16,103 +16,20 @@ class ConverterSimple implements ConverterInterface {
 	 * @return string
 	 */
 	public function convert($html) {
-		// strip not supported tags
-		$output = $this->escapeLatexSpecialChars($html);
-		$output = strip_tags($html,'<p><i><em><u><b><strong><strike><span><del><hr><br>');
-		
-		// parse paragraphs
-		$map = array(
-				'/\<p\>/'=>'',
-				'/\<\/p\>/'=>"\n\n"
-		);
-		$output = preg_replace(array_keys($map),array_values($map),$output);
-	
-		// convert basic tags
-		$map = array(
-				'/\<b\>/'=>'\\textbf{',
-				'/\<strong\>/'=>'\\textbf{',
-				'/\<i\>/'=>'\\textit{',
-				'/\<em\>/'=>'\\textit{',
-				'/\<u\>/'=>'\\underline{',
-				'/\<strike\>/'=>'\\sout{',
-				'/\<del\>/'=>'\\sout{',
-// 				'/\<hr\/?\>/','\\hline',
-// 				'/\br\/?\>/','\\\\',
-				'/\<\/.*?\>/'=>'}'
-		);
-		$output = preg_replace(array_keys($map),array_values($map),$output);
-		
-		// convert span with styles
-		$output = preg_replace_callback('/\<span\s*style\=\"(.*?)\"\s*\>/', function($matches) {
-			if(count($matches) > 0) {
-				$style = trim($matches[1]);
-				$arStyle = explode(';',$style);
-				
-				$string = '';
-				foreach($arStyle as $style) {
-					$replacement = ConverterSimple::parseColorStyle($style);
-					if($replacement) {
-						$string .= $replacement;
-					}
-				}
-				
-				return empty($string) ? '{' : $string;
-			}
-		}, $output);
-	
-		return $output;
-	}
-	
-	private static function parseColorStyle($style) {
-		$arProp = explode(':',$style);
-		if(count($arProp) == 2) {
-			list($prop, $value) = $arProp;
-			$prop = trim($arProp[0]);
-			$value = trim($arProp[1]);
-			if($prop == 'color' || $prop == 'background-color') {
-				$schema = $value[0] == '#' ? self::COLOR_HTML : null;
-				if($schema == self::COLOR_HTML) {
-					$value = substr($value,1);
-				} else {
-					$schema = substr($value,0,4) == 'rgb(' ? self::COLOR_RGB : null;
-				}
-				
-				if($schema == self::COLOR_RGB) {
-					$value = substr($value, 4,-1);
-				} else {
-					return false;
-				}
-			}
-
-			if($prop == 'color') {
-				return sprintf('\textcolor[%s]{%s}{',$schema, $value);
-			}
-			if($prop == 'background-color') {
-				return sprintf('\colorbox[%s]{%s}{',$schema, $value);
-			}
-		}
-		
-		return false;
-	}
-	
-	/**
-	 *
-	 * @param string $input
-	 * @return string
-	 */
-	private function escapeLatexSpecialChars($input) {
-		$tidy = new \tidy();
-		$input = $tidy->repairString($input);
-	
-		$doc = new \DOMDocument('1.0', 'UTF-8');
-		$doc->loadHTML($input);
-		
-		$this->escapeNode($doc);
-		$body = $doc->getElementsByTagName('body')->item(0);
-	
-		$output = $doc->saveHTML($body);
-	
-		return $output;
+	    $tidy = new \tidy();
+	    $html = $tidy->repairString($html);
+	    
+	    $doc = new \DOMDocument('1.0', 'UTF-8');
+	    $doc->loadHTML($html);
+	    $latexNode = LatexNode::create('');
+	    $body = $doc->getElementsByTagName('body')->item(0);
+	    if($body->childNodes) {
+	        foreach($body->childNodes as $child) {
+	            $latexNode->addNode($this->escapeNode($child));
+	        }
+	    }
+	    
+	    return (string)$latexNode;
 	}
 	
 	/**
@@ -120,15 +37,126 @@ class ConverterSimple implements ConverterInterface {
 	 * @param \DOMNode $node
 	 */
 	private function escapeNode(\DOMNode $node) {
-		if($node->nodeType == XML_TEXT_NODE && $node->textContent) {
-			$content = Util::escapeLatexSpecialChars($node->textContent);
-			$node->nodeValue = $content;
+	    if($node->nodeType == XML_ELEMENT_NODE) {
+	       switch($node->nodeName) {
+	       	case 'p':
+	       	   $latexNode = LatexNode::create('','',"\n\n");
+	       	break;
+	       	case 'del':
+	       	case 'strike':
+	       	    $latexNode = LatexNode::create('','\\sout{','}');
+	       	break;
+	       	case 'em':
+	       	case 'i':
+	       	    $latexNode = LatexNode::create('','\\italic{','}');
+	       	    break;
+       	    case 'b':
+       	    case 'strong':
+       	        $latexNode = LatexNode::create('','\\textbf{','}');
+       	        break;
+       	    case 'br':
+       	        $latexNode = LatexNode::create('','','\\\\');
+       	        break;
+       	    case 'hr':
+   	            $latexNode = LatexNode::create('','\\hline',"\n\n");
+   	            break;
+       	    case 'span':
+       	        $latexNode = LatexNode::create('');
+       	        $style = $node->attributes->getNamedItem('style');
+       	        if($style) {
+       	            $styleStr = $style->textContent;
+       	            $latexNodes = $this->parseStyle($styleStr);
+       	            foreach($latexNodes as $n) {
+       	                $latexNode->addNode($n);
+       	            }
+       	        }
+       	        
+       	        break;
+       	    default:
+       	        $latexNode = LatexNode::create('');
+	       }
+	    } else if($node->nodeType == XML_TEXT_NODE) {
+		    $latexNode = LatexNode::create(Util::escapeLatexSpecialChars(html_entity_decode($node->textContent)));
+		} else {
+		    $latexNode = LatexNode::create('');
 		}
 		
 		if($node->childNodes) {
 			foreach($node->childNodes as $childNode) {
-				$this->escapeNode($childNode);
+				$latexNode->addNodeAsLeaf($this->escapeNode($childNode));
 			}
 		}
+
+		return $latexNode;
+	}
+	
+	/**
+	 * 
+	 * @param string $styleStr
+	 * @return array
+	 */
+	private function parseStyle($styleStr) {
+	    $arStyle = explode(';',$styleStr);
+	    
+	    $supported = array('background-color','color');
+	    $map = array();
+	    foreach($arStyle as $style) {
+	        $arProp = explode(':',$style);
+	        if(count($arProp) == 2) {
+    	        $prop = trim($arProp[0]);
+    	        $value = trim($arProp[1]);
+    	        if(in_array($prop,$supported)) {
+    	            $map[$prop] = $value;
+    	        }
+	        }
+	    }
+	    
+	    $nodes = array();
+	    foreach($supported as $prop) {
+	        if(key_exists($prop, $map)) {
+	            $nodes[] = $this->handleStyle($prop, $map[$prop]);
+	        }
+	    }
+	    
+	    return $nodes;
+	}
+	
+	private function handleStyle($key, $value) {
+	    if($key == 'background-color') {
+	        $color = $this->getColor($value);
+	        if(!$color) {
+	            return LatexNode::create('');
+	        }
+	         
+	        return LatexNode::create('',sprintf('\\colorbox[%s]{%s}{',$color['schema'], $color['value']),'}');
+	    }
+	    
+	    if($key == 'color') {
+	        $color = $this->getColor($value);
+	        if(!$color) {
+	            return LatexNode::create('');
+	        }
+	        
+	        return LatexNode::create('',sprintf('\\textcolor[%s]{%s}{',$color['schema'], $color['value']),'}');
+	    }
+	    
+	    return LatexNode::create('');
+	}
+	
+	private function getColor($value) {
+	    $schema = $value[0] == '#' ? self::COLOR_HTML : null;
+	    if($schema == self::COLOR_HTML) {
+	        $value = substr($value,1);
+	    } else {
+	        $schema = substr($value,0,4) == 'rgb(' ? self::COLOR_RGB : null;
+	    }
+	    
+	    if($schema == self::COLOR_RGB) {
+	        $value = substr($value, 4,-1);
+	    } else {
+	        return false;
+	    }
+	    
+	    return array('schema'=>$schema,'value'=>$value);
 	}
 }
