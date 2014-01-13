@@ -58,6 +58,9 @@ class ConverterSimple implements ConverterInterface {
        	    case 'strong':
        	        $latexNode = LatexNode::create('','\\textbf{','}');
        	        break;
+   	        case 'u':
+   	            $latexNode = LatexNode::create('','\\underline{','}');
+   	            break;
        	    case 'br':
        	        $latexNode = LatexNode::create('','','\\\\');
        	        break;
