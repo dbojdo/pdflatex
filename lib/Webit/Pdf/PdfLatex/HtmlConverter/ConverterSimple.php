@@ -48,7 +48,7 @@ class ConverterSimple implements ConverterInterface {
 	       	break;
 	       	case 'em':
 	       	case 'i':
-	       	    $latexNode = LatexNode::create('','\\italic{','}');
+	       	    $latexNode = LatexNode::create('','\\textit{','}');
 	       	    break;
        	    case 'b':
        	    case 'strong':
