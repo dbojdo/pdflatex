@@ -10,8 +10,8 @@ class Util {
 	 */
     public static function escapeLatexSpecialChars($input) {
         if (is_string($input)) {
-            $search = array('\\', '#', '$', '€', '%', '&', '~', '_', '{', '}', '^', '\\$\backslash\\$');
-            $replace = array('$\backslash$', '\#', '\$', '\euro', '\%', '\&', '$\sim$', '\_', '\{', '\}', '$\hat{~}$', '$\backslash$');
+            $search = array('\\', '#', '$', '€', '%', '&', '~', '_', '{', '}', '^', '\\$\backslash\\$','>','<','>=','<=');
+            $replace = array('$\backslash$', '\#', '\$', '\euro', '\%', '\&', '$\sim$', '\_', '\{', '\}', '$\hat{~}$', '$\backslash$','\textgreater','\textless','\ge','\le');
             return str_replace($search, $replace, $input);
         }
         

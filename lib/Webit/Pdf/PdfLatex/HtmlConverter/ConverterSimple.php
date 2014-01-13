@@ -17,10 +17,12 @@ class ConverterSimple implements ConverterInterface {
 	 */
 	public function convert($html) {
 	    $tidy = new \tidy();
-	    $html = $tidy->repairString($html);
+	    $html = $tidy->repairString($html,array('doctype'=>'html5'),'utf8');
 	    
-	    $doc = new \DOMDocument('1.0', 'UTF-8');
+	    $doc = new \DOMDocument('1.0');
+	    $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
 	    $doc->loadHTML($html);
+	    
 	    $latexNode = LatexNode::create('');
 	    $body = $doc->getElementsByTagName('body')->item(0);
 	    if($body->childNodes) {
@@ -29,7 +31,9 @@ class ConverterSimple implements ConverterInterface {
 	        }
 	    }
 	    
-	    return (string)$latexNode;
+        $output = (string)$latexNode;
+	    
+	    return $output;
 	}
 	
 	/**
@@ -76,7 +80,9 @@ class ConverterSimple implements ConverterInterface {
        	        $latexNode = LatexNode::create('');
 	       }
 	    } else if($node->nodeType == XML_TEXT_NODE) {
-		    $latexNode = LatexNode::create(Util::escapeLatexSpecialChars(html_entity_decode($node->textContent,null,'UTF-8')));
+	        $decoded = html_entity_decode($node->textContent,null,'UTF-8');
+	        $escaped = Util::escapeLatexSpecialChars($decoded);
+		    $latexNode = LatexNode::create($escaped);
 		} else {
 		    $latexNode = LatexNode::create('');
 		}
