@@ -1,6 +1,7 @@
 <?php
 namespace Webit\Pdf\PdfLatex\HtmlConverter;
 
+use Webit\Pdf\PdfLatex\Util;
 class ConverterSimple implements ConverterInterface {
 	
 	/**
@@ -16,6 +17,7 @@ class ConverterSimple implements ConverterInterface {
 	 */
 	public function convert($html) {
 		// strip not supported tags
+		$output = $this->escapeLatexSpecialChars($html);
 		$output = strip_tags($html,'<p><i><em><u><b><strong><strike><span><del><hr><br>');
 		
 		// parse paragraphs
@@ -91,5 +93,42 @@ class ConverterSimple implements ConverterInterface {
 		}
 		
 		return false;
+	}
+	
+	/**
+	 *
+	 * @param string $input
+	 * @return string
+	 */
+	private function escapeLatexSpecialChars($input) {
+		$tidy = new \tidy();
+		$input = $tidy->repairString($input);
+	
+		$doc = new \DOMDocument('1.0', 'UTF-8');
+		$doc->loadHTML($input);
+		
+		$this->escapeNode($doc);
+		$body = $doc->getElementsByTagName('body')->item(0);
+	
+		$output = $doc->saveHTML($body);
+	
+		return $output;
+	}
+	
+	/**
+	 * 
+	 * @param \DOMNode $node
+	 */
+	private function escapeNode(\DOMNode $node) {
+		if($node->nodeType == XML_TEXT_NODE && $node->textContent) {
+			$content = Util::escapeLatexSpecialChars($node->textContent);
+			$node->nodeValue = $content;
+		}
+		
+		if($node->childNodes) {
+			foreach($node->childNodes as $childNode) {
+				$this->escapeNode($childNode);
+			}
+		}
 	}
 }
