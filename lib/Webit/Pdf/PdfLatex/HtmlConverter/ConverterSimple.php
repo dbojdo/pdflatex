@@ -76,7 +76,7 @@ class ConverterSimple implements ConverterInterface {
        	        $latexNode = LatexNode::create('');
 	       }
 	    } else if($node->nodeType == XML_TEXT_NODE) {
-		    $latexNode = LatexNode::create(Util::escapeLatexSpecialChars(html_entity_decode($node->textContent)));
+		    $latexNode = LatexNode::create(Util::escapeLatexSpecialChars(html_entity_decode($node->textContent,null,'UTF-8')));
 		} else {
 		    $latexNode = LatexNode::create('');
 		}
