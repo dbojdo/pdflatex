@@ -1,33 +1,34 @@
 <?php
 namespace Webit\Pdf\PdfLatex;
 
+use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
+use Twig\TwigFunction;
 use Webit\Pdf\PdfLatex\HtmlConverter\ConverterInterface;
-class TwigExtension extends \Twig_Extension {
 
-	/**
-	 * 
-	 * @var ConverterInterface
-	 */
-	private $converter;
+class TwigExtension extends AbstractExtension {
+
+    /** @var ConverterInterface*/
+    private $converter;
 	
-	public function __construct(ConverterInterface $converter) {
-		$this->converter = $converter;
-	}
+    public function __construct(ConverterInterface $converter) {
+        $this->converter = $converter;
+    }
 	
     public function getFunctions()
     {
         return array(
-            'noBreakSpace' => new \Twig_Function_Method($this, 'noBreakSpace'),
+            'noBreakSpace' => new TwigFunction('noBreakSpace', [$this, 'noBreakSpace']),
         );
     }
     
     public function getFilters() {
         return array(
-            'escapeLatexChars' => new \Twig_Filter_Method($this, 'escapeLatexSpecialChars'),
-            'noBreakSpace' => new \Twig_Filter_Method($this, 'noBreakSpace'),
-            'newLine' => new \Twig_Filter_Method($this, 'newLine'),
-        	'latexCommand' => new \Twig_Filter_Method($this, 'wrapLatexCommand'),
-        	'toLatex' => new \Twig_Filter_Method($this, 'htmlToLatex')
+            'escapeLatexChars' => new TwigFilter('escapeLatexChars', [$this, 'escapeLatexSpecialChars']),
+            'noBreakSpace' => new TwigFilter('noBreakSpace', [$this, 'noBreakSpace']),
+            'newLine' => new TwigFilter('newLine', [$this, 'newLine']),
+            'latexCommand' => new TwigFilter('latexCommand', [$this, 'wrapLatexCommand']),
+            'toLatex' => new TwigFilter('toLatex', [$this, 'htmlToLatex'])
         );
     }
     
